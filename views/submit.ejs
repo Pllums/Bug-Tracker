@@ -1,0 +1,18 @@
+<%- include("partials/header") -%>
+<h1>Submit a Bug</h1>
+<form action="/submit" method="post">
+  <div class="form-group">
+    <label for="bugTitle">Title</label><input class="form-control" type="text" name="bugTitle" required/> 
+    <label for="bugCategory">Where did you experience the bug?</label><select class="form-select" name="bugCategory" id="" required>
+      <option value="login">Login Screen</option>
+      <option value="ui">User Interface (UI/UX)</option>
+      <option value="gameplay">Gameplay</option>
+      <option value="other">Other</option>
+    </select>
+    <label for="bugDescription">Description</label><textarea class="form-control" name="bugDescription" rows="4"  required></textarea> 
+    <p class="question">Is the bug repeatable?</p>
+    <label for="yes">Yes</label> <input name="repeatable" type="radio" id="yes" value="yes"> <label for="no">No</label> <input name="repeatable" type="radio" id="no" value="no">
+  </div>
+  <button class="btn btn-dark hover-light" type="submit">Submit</button>
+</form>
+<%- include("partials/footer") -%>

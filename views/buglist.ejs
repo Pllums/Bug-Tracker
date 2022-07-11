@@ -1,0 +1,14 @@
+<%- include("partials/header") -%>
+<h1>Bug List</h1>
+<p><%= homeStartingContent %></p>
+
+<% bugs.forEach(bug => { %>
+  <% if(bug.status != "Fixed") {%>
+    <h1><%=bug.title%></h1>
+    <p><%=bug.description.substring(0,100)+" ..."%> 
+    <a href="bugs/<%= bug.title%>">Read More</a>
+    </p>
+  <%}%>
+<%});%>
+
+<%- include("partials/footer") -%>
