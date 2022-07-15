@@ -1,14 +1,19 @@
 <%- include("partials/header") -%>
-<h1>Bug List</h1>
-<p><%= homeStartingContent %></p>
-
-<% bugs.forEach(bug => { %>
-  <% if(bug.status != "Fixed") {%>
-    <h1><%=bug.title%></h1>
-    <p><%=bug.description.substring(0,100)+" ..."%> 
-    <a href="bugs/<%= bug.title%>">Read More</a>
-    </p>
-  <%}%>
-<%});%>
+<div class="container-fluid bugs-container">
+  <h1>Bug List</h1>
+  <p>Here you will find a living list of all bugs that have been submitted for ticket help. Please assign yourself a bug that is within your ability and start workign on the task. When you are dont making changes with your code, please be sure to submit all your changes in the notes field on the individual bug page and change your the bugs status.</p>
+  
+  <div class="container list-container">
+    <% bugs.forEach(bug => { %>
+      <% if(bug.status != "Fixed") {%>
+        <hr>
+        <h1><%=bug.title%></h1>
+        <p><%=bug.description.substring(0,100)+" ..."%>
+        <a href="bugs/<%= bug.title%>"><button class="read-btn">Read More</button></a>
+        </p>
+      <%}%>
+    <%});%>
+  </div>
+</div>
 
 <%- include("partials/footer") -%>

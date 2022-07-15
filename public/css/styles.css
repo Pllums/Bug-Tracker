@@ -1,8 +1,39 @@
+/* Constant styling */
+
+body{
+    /* background-image: url(/images/WallpaperDog-20394351.png); */
+    background-color: #EFEAD8;
+    color: #ebe7e2;  
+}
+
+a{
+    color: #EFEAD8;
+}
+input:checked{
+    color: black;
+}
+
+button:hover{
+    opacity: .8;
+}
+
+.dropdown-menu{
+    text-align: right;
+}
+
+.bugs-container{
+    width: auto;
+    background-color: #5F7161;
+    border-radius: 20px;
+    margin-top: 50px ;
+   }
+
 .container-fluid {
     padding-top: 70px;
     padding-bottom: 70px;
 }
 .navbar {
+    background-color: #5F7161;
     padding-top: 15px;
     padding-bottom: 15px;
     border: 0;
@@ -14,6 +45,21 @@
 .navbar-nav  li a:hover {
     color: #1abc9c !important;
 }
+
+.nav-text{
+    color: #ebe7e2;
+}
+
+.nav-pills .nav-link.active{
+    color: #5F7161;
+   background-color: #EFEAD8;
+   border: none;
+}
+
+.nav-pills .nav-link{
+    color: #EFEAD8;
+}
+
 
 .footer-padding {
 	padding-bottom: 60px;
@@ -34,6 +80,32 @@
     color: #fff;
 }
 
+/* Login Page Styling */
+
+.siginin-btn{
+    color: #576F72;
+}
+
+.welcome-text{
+    text-align: center;
+    padding-top: 20px;
+}
+
+/* Submit Page styling */
+
+.submit-btn{
+    color: #EFEAD8;
+    background-color: #6D8B74;
+    border: 1px solid white;
+}
+
+.submit-container{
+    width: auto;
+    background-color: rgb(209, 209, 209);
+    border-radius: 20px;
+    margin-top: 50px ;
+}
+
 .question{
     margin-top: 15px;
 }
@@ -42,6 +114,24 @@ button{
     margin-top: 15px;
 }
 
-.hover-light:hover{
-    opacity: .8;
+
+/* Bug Page styling */
+
+.status-h1{
+   text-align: right;
+}
+
+/* List page Styling */
+
+.table{
+    font-family: inherit;
+    color: inherit;
+    border: 0px hidden;
+}
+
+.read-btn{
+    color: #5F7161;
+    border: 1px solid white;
+    border-radius: 20px;
+    transform: scale(75%);
 }

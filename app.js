@@ -1,29 +1,32 @@
 
 // App Dependencies
+const md5 = require("md5");
 const express = require("express");
 const _ = require("lodash");
 const ejs = require("ejs");
 const { default: mongoose, mongo } = require("mongoose");
+const { event } = require("jquery");
 const app = express();
 
 // MongoDB integrate with Mongoose and schemas
 
-mongoose.connect("mongodb://localhost:27017/bugFixDB", { useNewUrlParser: true });
+mongoose.connect("mongodb://localhost:27017/bugFixDB", {
+	useNewUrlParser: true,
+});
 
-const Bug = mongoose.model("Bug",{
+const Bug = mongoose.model("Bug", {
 	title: String,
 	description: String,
 	repeatable: String,
 	status: String,
-	changes: Array
+	changes: Array,
 });
 
 const Employee = mongoose.model("Employee", {
-	name : String,
+	name: String,
 	username: String,
 	email: String,
-	password: String
-
+	password: String,
 });
 
 // Setting EJS, parsing and static folder
@@ -33,40 +36,111 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 // Global Variables
-const homeStartingContent =
-	"Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
 const aboutContent =
-	"Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
-const contactContent =
-	"Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
-
+	"I built this project using ExpressJS and EJS to provide a dynamicly changing site where end users of the 'software' are able to log bugs and then the employees are able to log in and assign themselves a bug to work on. They are able to make notes on each individual bug page and the pages will be updated with the status and changelog notes for each bug. I handle all the submitted bugs and list of registered employees through MongoDB for this project.";
 
 // App Logic
-app.get("/", function(req, res){
-	res.render("login")
-	// $(".registerBtn").onClick(function(event) {
-	// 	console.log(event);
-	// });
+app.get("/", function (req, res) {
+	res.render("login");
 });
 
+app.post("/register", function (req, res) {
+	if (md5(req.body.registerPassword) === md5(req.body.registerRepeatPassword)) {
+		let employee = new Employee({
+			name:
+				_.capitalize(req.body.registerFirstName) +
+				" " +
+				_.capitalize(req.body.registerLastName),
+			username: _.toLower(req.body.registerUsername),
+			email: _.toLower(req.body.registerEmail),
+			password: md5(req.body.registerPassword),
+		});
 
+		employee.save().then(() => console.log("Employee Saved."));
+	} else {
+		console.log("Passwords don't match");
+	}
+});
 
-app.post("/", function(req, res){
-		
-	let employee = new Employee( {
-		name : _.capitalize(req.body.registerFirstName) + _.capitalize(req.body.registerLastName),
-		username: req.body.registerUsername,
-		email: _.lowerCase(req.body.registerEmail),
-		password: req.body.registerPassword
+app.post("/login", function (req, res) {
+	const enteredUsername = _.toLower(req.body.loginUsername);
+	const enteredPassword = md5(req.body.loginUserPassword);
+
+	Employee.findOne({ username: enteredUsername }, function (err, employee) {
+		if (employee.password === enteredPassword) {
+			console.log("Thanks for logging in");
+			res.redirect("/buglist");
+		} else {
+			console.log("Please try again");
+		}
 	});
-	employee.save().then(() => console.log("Employee Saved."));
+
+	// Employee.find({}, function (err, employees) {
+	// 	employees.forEach((employee) => {
+	// 		const storedUsername = _.toLower(employee.username);
+	// 		const storedPassword = employee.password;
+	// 		const loginDetails = {
+	// 			username: enteredUsername,
+	// 			password: enteredPassword,
+	// 		};
+	// 		const storedDetails = {
+	// 			username: storedUsername,
+	// 			password: storedPassword,
+	// 		};
+	// 		if (_.isEqual(loginDetails, storedDetails)) {
+	// 			console.log("Thanks for logging in");
+	// 			res.redirect("/buglist");
+	// 		} else {
+	// 			console.log("Invalid username or password. Please try again.");
+	// 		}
+	// 	});
+	// });
+	// if ("registerEmail" in req.body) {
+	// 	if (req.body.registerPassword === req.body.registerRepeatPassword) {
+	// 		let employee = new Employee({
+	// 			name:
+	// 				_.capitalize(req.body.registerFirstName) +
+	// 				" " +
+	// 				_.capitalize(req.body.registerLastName),
+	// 			username: req.body.registerUsername,
+	// 			email: _.toLower(req.body.registerEmail),
+	// 			password: req.body.registerPassword,
+	// 		});
+
+	// 		employee.save().then(() => console.log("Employee Saved."));
+	// 	} else {
+	// 		window.alert("Passwords don't match");
+	// 	}
+	// } else if ("loginUsername" in req.body) {
+	// 	const enteredUsername = _.toLower(req.body.loginUsername);
+	// 	const enteredPassword = req.body.loginUserPassword;
+
+	// 	Employee.find({}, function (err, employees) {
+	// 		employees.forEach((employee) => {
+	// 			const storedUsername = _.toLower(employee.username);
+	// 			const storedPassword = employee.password;
+	// 			const loginDetails = {
+	// 				username: enteredUsername,
+	// 				password: enteredPassword,
+	// 			};
+	// 			const storedDetails = {
+	// 				username: storedUsername,
+	// 				password: storedPassword,
+	// 			};
+	// 			if (_.isEqual(loginDetails, storedDetails)) {
+	// 				console.log("Thanks for logging in");
+	// 				res.redirect("/buglist");
+	// 			} else {
+	// 			}
+	// 		});
+	// 	});
+	// }
 });
 
 app.get("/buglist", function (req, res) {
-	Bug.find({},function (err, bugs){
+	Bug.find({}, function (err, bugs) {
 		res.render("buglist", {
-		homeStartingContent: homeStartingContent,
-		bugs: bugs,
+			bugs: bugs,
 		});
 	});
 });
@@ -87,21 +161,28 @@ app.get("/submit", function (req, res) {
 
 app.get("/bugs/:topic", function (req, res) {
 	const requestedTitle = _.lowerCase(req.params.topic);
- 
-	Bug.find({}, function(err, bugs){
-		bugs.forEach(bug => {
+
+	Bug.find({}, function (err, bugs) {
+		bugs.forEach((bug) => {
 			const storedTitle = _.lowerCase(bug.title);
 
 			if (storedTitle === requestedTitle) {
-				res.render("bugs", { bug: bug })
+				res.render("bugs", { bug: bug });
 
-				app.post("/bugs/:topic", function(req,res){
-					Bug.updateOne({title: bug.title}, {$push:{changes: (req.body.bugChanges)}, $set:{status:_.capitalize(req.body.statusSelect)}}, function(err){
-						console.log(err);
-					});
+				app.post("/bugs/:topic", function (req, res) {
+					Bug.updateOne(
+						{ title: bug.title },
+						{
+							$push: { changes: req.body.bugChanges },
+							$set: { status: _.capitalize(req.body.statusSelect) },
+						},
+						function (err) {
+							console.log(err);
+						}
+					);
 					res.redirect("/buglist");
 				});
-			};
+			}
 		});
 	});
 });
