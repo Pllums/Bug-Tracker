@@ -18,6 +18,7 @@ app.use(express.static("public"));
 //Setting Authentication
 app.use(
 	session({
+		secret: process.env.BUG_TRACKER_SECRET,
 		resave: false,
 		saveUninitialized: false,
 	})
@@ -47,7 +48,7 @@ const employeeSchema = new mongoose.Schema({
 	password: String,
 });
 
-employeeSchema.plugin(passportLocalMongoose);
+employeeSchema.plugin(passportLocalMongoose, { usernameLowerCase: true });
 
 const Bug = mongoose.model("Bug", bugSchema);
 
@@ -60,11 +61,12 @@ passport.deserializeUser(Employee.deserializeUser());
 // Global Variables
 const aboutContent =
 	"I built this project using ExpressJS and EJS to provide a dynamicly changing site where end users of the 'software' are able to log bugs and then the employees are able to log in and assign themselves a bug to work on. They are able to make notes on each individual bug page and the pages will be updated with the status and changelog notes for each bug. I handle all the submitted bugs and list of registered employees through MongoDB for this project.";
-var currentUser = {};
+let currentUser = {};
+
 // App Logic
 app.get("/", function (req, res) {
 	res.render("login");
-	currentUser = {};
+	currentUser = {}; // resets the currentUser everytime the login page is rendered. This allows me to carry over the actual name of the user to show which bugs are assigned and grert them.
 });
 
 app.get("/buglist", function (req, res) {
@@ -81,9 +83,14 @@ app.get("/buglist", function (req, res) {
 });
 
 app.get("/user-tasks", function (req, res) {
-	Bug.find({}, function (err, bugs) {
-		res.render("user-tasks", { bugs: bugs, currentUser: currentUser });
-	});
+	if (req.isAuthenticated()) {
+		Bug.find({}, function (err, bugs) {
+			res.render("user-tasks", { bugs: bugs, currentUser: currentUser });
+		});
+	} else {
+		console.log("You are not logged in.");
+		res.redirect("/");
+	}
 });
 
 app.get("/about", function (req, res) {
@@ -101,30 +108,35 @@ app.get("/submit", function (req, res) {
 //Dynamically render a bug on its own page for futher reading using EJS.
 
 app.get("/bugs/:topic", function (req, res) {
-	const requestedTitle = _.lowerCase(req.params.topic);
-	console.log(requestedTitle);
+	if (req.isAuthenticated()) {
+		const requestedTitle = _.lowerCase(req.params.topic);
+		console.log(requestedTitle);
 
-	Bug.findOne({ title: req.params.topic }, function (err, bug) {
-		console.log(bug);
-		res.render("bugs", { bug: bug, currentUser: currentUser });
+		Bug.findOne({ title: req.params.topic }, function (err, bug) {
+			console.log(bug);
+			res.render("bugs", { bug: bug, currentUser: currentUser });
 
-		app.post("/bugs/:topic", function (req, response) {
-			Bug.findOneAndUpdate(
-				{ title: req.params.topic },
-				{
-					$set: {
-						status: _.capitalize(req.body.statusSelect),
-						assignedTo: req.body.assignedTo,
+			app.post("/bugs/:topic", function (req, response) {
+				Bug.findOneAndUpdate(
+					{ title: req.params.topic },
+					{
+						$set: {
+							status: _.capitalize(req.body.statusSelect),
+							assignedTo: req.body.assignedTo,
+						},
+						$push: { changes: req.body.bugChanges },
 					},
-					$push: { changes: req.body.bugChanges },
-				},
-				function (err) {
-					console.log(err);
-				}
-			);
-			response.redirect("/buglist");
+					function (err) {
+						console.log(err);
+					}
+				);
+				response.redirect("/buglist");
+			});
 		});
-	});
+	} else {
+		console.log("You are not logged in.");
+		res.redirect("/");
+	}
 });
 
 //Adding a new bug to the database when using the post method.
@@ -144,10 +156,14 @@ app.post("/submit", function (req, res) {
 
 app.post("/register", function (req, res) {
 	if (req.body.password === req.body.registerRepeatPassword) {
-		let username = req.body.username;
 		Employee.register(
 			{
-				username: username,
+				username: req.body.username,
+				name:
+					_.capitalize(req.body.registerFirstName) +
+					" " +
+					_.capitalize(req.body.registerLastName),
+				email: _.toLower(req.body.registerEmail),
 			},
 			req.body.password,
 			function (err, employee) {
@@ -156,34 +172,10 @@ app.post("/register", function (req, res) {
 					res.redirect("/");
 				} else {
 					passport.authenticate("local")(req, res, function () {
-						console.log(req.body.username);
-						Employee.findOneAndUpdate(
-							{ username: username },
-							{
-								$set: {
-									name:
-										_.capitalize(req.body.registerFirstName) +
-										" " +
-										_.capitalize(req.body.registerLastName),
-									email: _.toLower(req.body.registerEmail),
-								},
-							}
-						);
+						currentUser = employee;
 						res.redirect("/buglist");
 					});
 				}
-
-				// let employee = new Employee({
-				// 	name:
-				// 		_.capitalize(req.body.registerFirstName) +
-				// 		" " +
-				// 		_.capitalize(req.body.registerLastName),
-				// 	username: _.toLower(req.body.registerUsername),
-				// 	email: _.toLower(req.body.registerEmail),
-				// 	password: req.body.registerPassword,
-				// });
-
-				// employee.save().then(() => console.log("Employee Saved."));
 			}
 		);
 	} else {
@@ -194,7 +186,7 @@ app.post("/register", function (req, res) {
 
 app.post("/login", function (req, res) {
 	const employee = new Employee({
-		username: req.body.username,
+		username: _.toLower(req.body.username),
 		password: req.body.password,
 	});
 	req.login(employee, function (err) {
@@ -202,23 +194,16 @@ app.post("/login", function (req, res) {
 			console.log(err);
 		} else {
 			passport.authenticate("local")(req, res, function () {
+				Employee.findOne(
+					{ username: employee.username },
+					function (err, result) {
+						currentUser = result;
+					}
+				);
 				res.redirect("/buglist");
 			});
 		}
 	});
-	// const enteredUsername = _.toLower(req.body.loginUsername);
-	// const enteredPassword = req.body.loginUserPassword;
-
-	// Employee.findOne({ username: enteredUsername }, function (err, employee) {
-	// 	if (employee.password === enteredPassword) {
-	// 		currentUser = employee;
-	// 		console.log("Thanks for logging in" + currentUser.name);
-	// 		res.redirect("/buglist");
-	// 	} else {
-	// 		console.log("Please try again");
-	// 		res.redirect("/");
-	// 	}
-	// });
 });
 
 app.get("/logout", function (req, res) {
