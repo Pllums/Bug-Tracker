@@ -67,48 +67,17 @@ app.get("/", function (req, res) {
 	currentUser = {};
 });
 
-app.post("/register", function (req, res) {
-	if (req.body.registerPassword === req.body.registerRepeatPassword) {
-		let employee = new Employee({
-			name:
-				_.capitalize(req.body.registerFirstName) +
-				" " +
-				_.capitalize(req.body.registerLastName),
-			username: _.toLower(req.body.registerUsername),
-			email: _.toLower(req.body.registerEmail),
-			password: req.body.registerPassword,
+app.get("/buglist", function (req, res) {
+	if (req.isAuthenticated()) {
+		Bug.find({}, function (err, bugs) {
+			res.render("buglist", {
+				bugs: bugs,
+				currentUser: currentUser,
+			});
 		});
-
-		employee.save().then(() => console.log("Employee Saved."));
 	} else {
-		console.log("Passwords don't match");
 		res.redirect("/");
 	}
-});
-
-app.post("/login", function (req, res) {
-	const enteredUsername = _.toLower(req.body.loginUsername);
-	const enteredPassword = req.body.loginUserPassword;
-
-	Employee.findOne({ username: enteredUsername }, function (err, employee) {
-		if (employee.password === enteredPassword) {
-			currentUser = employee;
-			console.log("Thanks for logging in" + currentUser.name);
-			res.redirect("/buglist");
-		} else {
-			console.log("Please try again");
-			res.redirect("/");
-		}
-	});
-});
-
-app.get("/buglist", function (req, res) {
-	Bug.find({}, function (err, bugs) {
-		res.render("buglist", {
-			bugs: bugs,
-			currentUser: currentUser,
-		});
-	});
 });
 
 app.get("/user-tasks", function (req, res) {
@@ -158,21 +127,107 @@ app.get("/bugs/:topic", function (req, res) {
 	});
 });
 
-
 //Adding a new bug to the database when using the post method.
 
-app.post("/submit", function (req, res) {	
+app.post("/submit", function (req, res) {
 	console.log(req.body);
 	let newBug = new Bug({
 		title: _.capitalize(req.body.bugTitle),
 		description: _.capitalize(req.body.bugDescription),
 		repeatable: _.capitalize(req.body.repeatable),
 		status: "Queued",
-		});
-		newBug.save().then(() => console.log("Bug submitted."));
-	
+	});
+	newBug.save().then(() => console.log("Bug submitted."));
+
 	res.redirect("/buglist");
-	
+});
+
+app.post("/register", function (req, res) {
+	if (req.body.password === req.body.registerRepeatPassword) {
+		let username = req.body.username;
+		Employee.register(
+			{
+				username: username,
+			},
+			req.body.password,
+			function (err, employee) {
+				if (err) {
+					console.log(err);
+					res.redirect("/");
+				} else {
+					passport.authenticate("local")(req, res, function () {
+						console.log(req.body.username);
+						Employee.findOneAndUpdate(
+							{ username: username },
+							{
+								$set: {
+									name:
+										_.capitalize(req.body.registerFirstName) +
+										" " +
+										_.capitalize(req.body.registerLastName),
+									email: _.toLower(req.body.registerEmail),
+								},
+							}
+						);
+						res.redirect("/buglist");
+					});
+				}
+
+				// let employee = new Employee({
+				// 	name:
+				// 		_.capitalize(req.body.registerFirstName) +
+				// 		" " +
+				// 		_.capitalize(req.body.registerLastName),
+				// 	username: _.toLower(req.body.registerUsername),
+				// 	email: _.toLower(req.body.registerEmail),
+				// 	password: req.body.registerPassword,
+				// });
+
+				// employee.save().then(() => console.log("Employee Saved."));
+			}
+		);
+	} else {
+		console.log("Passwords don't match");
+		res.redirect("/");
+	}
+});
+
+app.post("/login", function (req, res) {
+	const employee = new Employee({
+		username: req.body.username,
+		password: req.body.password,
+	});
+	req.login(employee, function (err) {
+		if (err) {
+			console.log(err);
+		} else {
+			passport.authenticate("local")(req, res, function () {
+				res.redirect("/buglist");
+			});
+		}
+	});
+	// const enteredUsername = _.toLower(req.body.loginUsername);
+	// const enteredPassword = req.body.loginUserPassword;
+
+	// Employee.findOne({ username: enteredUsername }, function (err, employee) {
+	// 	if (employee.password === enteredPassword) {
+	// 		currentUser = employee;
+	// 		console.log("Thanks for logging in" + currentUser.name);
+	// 		res.redirect("/buglist");
+	// 	} else {
+	// 		console.log("Please try again");
+	// 		res.redirect("/");
+	// 	}
+	// });
+});
+
+app.get("/logout", function (req, res) {
+	req.logout(function (err) {
+		if (err) {
+			console.log(err);
+		}
+	});
+	res.redirect("/");
 });
 
 app.listen(3000, function () {
