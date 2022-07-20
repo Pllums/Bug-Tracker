@@ -36,6 +36,7 @@
         <option value="assigned">Assigned</option>
         <option value="fixed">Fixed</option>
       </select>
+      <input type="hidden" name="assignedTo" value="<%=currentUser.name%>" class="">
       <label for="bugChanges"><p>Notes for Changelog</p></label><textarea required class="form-control" name="bugChanges" id="" cols="30" rows="10"></textarea>
       <button class="btn submit-btn" type="submit">Submit Changes</button>
     </div>

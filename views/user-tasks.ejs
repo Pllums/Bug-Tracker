@@ -1,0 +1,26 @@
+<%- include("partials/header") -%>
+<div class="container nameBanner">
+  <h1>Welcome <%=currentUser.name%></h1>
+</div>
+<div class="container bugs-container">
+  <div class="welcome-text my-auto">
+    <h1>Your Tasks</h1>
+    <p>Here are all the tasks that you have assigned yourself.</p>
+  </div>
+  <hr>
+  <div class="container list-container">
+    <%const myTasks = bugs.filter(bug =>{%>
+      <% return bug.assignedTo === currentUser.name%>
+      <%console.log(myTasks)%>
+    <%});%>
+
+    <% myTasks.forEach(task => { %>
+      <h1><%=task.title%></h1>
+        <p><%=task.description.substring(0,100)+" ..."%>
+        <a href="bugs/<%=task.title%>"><button class="read-btn">Read More</button></a>
+        </p><hr>
+    <%});%>
+  </div>
+</div>
+
+<%- include("partials/footer") -%>
