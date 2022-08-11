@@ -1,4 +1,4 @@
-# BSquash-It
+# Squash-It
 Squash-It is a bug tracker project I created using NodeJs and EJS that allowsan "employee" to register with the service or log in if there account already exists to check on the status of any submitted bugs. 
 Any users is able to submit a bug through the appropriate form on the site, however only authenticated users are able to view the entire buglist and any changes that are made to them.
 
