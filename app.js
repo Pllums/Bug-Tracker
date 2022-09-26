@@ -1,4 +1,3 @@
-
 // App Dependencies
 require("dotenv").config();
 const express = require("express");
@@ -28,9 +27,16 @@ app.use(passport.session());
 
 // MongoDB integrate with Mongoose and schemas
 
-mongoose.connect("mongodb://localhost:27017/bugFixDB", {
-	useNewUrlParser: true,
-});
+// mongoose.connect("mongodb://localhost:27017/bugFixDB", {
+// 	useNewUrlParser: true,
+// });
+
+mongoose.connect(
+	"mongodb+srv://burtonshredder:Alys5a12@bugfixcluster.xu9yunm.mongodb.net/bugFixDB",
+	{
+		useNewUrlParser: true,
+	}
+);
 
 const bugSchema = new mongoose.Schema({
 	title: String,
@@ -215,6 +221,11 @@ app.get("/logout", function (req, res) {
 	res.redirect("/");
 });
 
-app.listen(3000, function () {
+let port = process.env.PORT;
+if (port == null || port == "") {
+	port = 3000;
+}
+
+app.listen(port, function () {
 	console.log("Server started on port 3000");
 });
