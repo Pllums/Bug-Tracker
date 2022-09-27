@@ -27,10 +27,6 @@ app.use(passport.session());
 
 // MongoDB integrate with Mongoose and schemas
 
-// mongoose.connect("mongodb://localhost:27017/bugFixDB", {
-// 	useNewUrlParser: true,
-// });
-
 mongoose.connect(
 	"mongodb+srv://burtonshredder:Alys5a12@bugfixcluster.xu9yunm.mongodb.net/bugFixDB",
 	{
