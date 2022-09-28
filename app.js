@@ -15,6 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 //Setting Authentication
+
 app.use(
 	session({
 		secret: process.env.BUG_TRACKER_SECRET,
@@ -61,11 +62,24 @@ passport.serializeUser(Employee.serializeUser());
 passport.deserializeUser(Employee.deserializeUser());
 
 // Global Variables
+
 const aboutContent =
 	"I built this project using ExpressJS and EJS to provide a dynamicly changing site where end users of the 'software' are able to log bugs and then the employees are able to log in and assign themselves a bug to work on. They are able to make notes on each individual bug page and the pages will be updated with the status and changelog notes for each bug. I handle all the submitted bugs and list of registered employees through MongoDB for this project.";
 let currentUser = {};
 
 // App Logic
+let secret = process.env.BUG_TRACKER_SECRET;
+console.log(secret);
+
+let port = process.env.PORT;
+if (port == null || port == "") {
+	port = 3000;
+}
+
+app.listen(port, function () {
+	console.log("Server started on " + port);
+});
+
 app.get("/", function (req, res) {
 	res.render("login");
 	currentUser = {}; // resets the currentUser everytime the login page is rendered. This allows me to carry over the actual name of the user to show which bugs are assigned and grert them.
@@ -215,13 +229,4 @@ app.get("/logout", function (req, res) {
 		}
 	});
 	res.redirect("/");
-});
-
-let port = process.env.PORT;
-if (port == null || port == "") {
-	port = 3000;
-}
-
-app.listen(port, function () {
-	console.log("Server started on port 3000");
 });
