@@ -18,7 +18,7 @@ app.use(express.static("public"));
 
 app.use(
 	session({
-		secret: process.env.BUG_TRACKER_SECRET,
+		secret: "potatoes",
 		resave: false,
 		saveUninitialized: false,
 	})
